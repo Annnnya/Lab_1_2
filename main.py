@@ -37,7 +37,7 @@ def location_finder(line):
         except ValueError:
             return None
         # print(loc)
-        location = geolocator.geocode(loc)
+        location = geolocator.geocode(loc, timeout=None)
         if location is not None:
             return location.latitude, location.longitude
         else:
@@ -93,7 +93,7 @@ def map_creation(films, my_loc):
         iframe = folium.IFrame(film[0], width = 200, height = 100)
         markers_group.add_child(folium.Marker(location=film[2], popup=folium.Popup(iframe)))
     mapp.add_child(folium.LayerControl())
-    mapp.save('map_of_ilms.html')
+    mapp.save('map_of_films.html')
 
 def main():
     """
