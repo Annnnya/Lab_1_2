@@ -22,7 +22,7 @@ def location_finder(line):
     if '}' in line:
         line = line[line.index('}')+1:].strip()
     else:
-        line = line[(re.search('\([1-2][0-9][0-9][0-9]\)', line).end()+1):].strip()
+        line = line[(re.search(r'\([1-2][0-9][0-9][0-9]\)', line).end()+1):].strip()
     if line[0]=='(':
         line = line[line.find(')')+1:].strip()
     if '(' in line:
@@ -63,16 +63,20 @@ def reading_from_file(path, year, us_loc):
     """
     res = []
     date_pat = '\('+str(year)+'\)'
-    with open(path, 'r', encoding='utf-8', errors='ignore') as file:
-        for line in file:
-            if re.search(date_pat, line):
-                name = line[:(re.search(date_pat, line).start() - 1)].strip('"').strip("'")
-                # print(location_finder(line))
-                # print((name, hs.haversine(location_finder(line), us_loc)))
-                loc = location_finder(line)
-                if loc is not None:
-                    res.append((name, hs.haversine(loc, us_loc), loc))
-    return res
+    try:
+        with open(path, 'r', encoding='utf-8', errors='ignore') as file:
+            for line in file:
+                if re.search(date_pat, line):
+                    name = line[:(re.search(date_pat, line).start() - 1)].strip('"').strip("'")
+                    # print(location_finder(line))
+                    # print((name, hs.haversine(location_finder(line), us_loc)))
+                    loc = location_finder(line)
+                    if loc is not None:
+                        res.append((name, hs.haversine(loc, us_loc), loc))
+        return res
+    except FileNotFoundError:
+        print('Something wrong with your file path')
+        quit()
 
 def map_creation(films, my_loc):
     """
@@ -106,8 +110,20 @@ def main():
     parser.add_argument("longitude", help="the longitude of your location", type=str)
     parser.add_argument("path_to_file", help="path to the file with info aboit films", type=str)
     args = parser.parse_args()
-    the_location = (float(args.latitude), float(args.longitude))
-    map_creation(reading_from_file(args.path_to_file, args.year, the_location), the_location)
+    if re.search('[1-2][0-9][0-9][0-9]', args.year):
+        try:
+            latitude = float(args.latitude)
+            longitude = float(args.longitude)
+            assert -90 <= latitude <= 90 and -180 <= longitude <=180
+            the_location = (latitude, longitude)
+            map_creation(reading_from_file(args.path_to_file, args.year, the_location),\
+                 the_location)
+        except AssertionError:
+            print('please enter valid coordinates')
+        except  ValueError:
+            print('please enter valid coordinates')
+    else:
+        print('please enter a valid year')
 
 if __name__ == "__main__":
     main()
